@@ -4,37 +4,44 @@ import os
 
 from dotenv import load_dotenv
 from selenium import webdriver
+import chromedriver_binary
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 
 # EMAIL, PASSWORD は .env に書く
 load_dotenv(verbose=True)
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
-EMAIL = os.environ.get("EMAIL")
-PASSWORD = os.environ.get("PASSWORD")
+login_id = os.environ.get("EMAIL")
+login_pw = os.environ.get("PASSWORD")
 
 chromeOptions = webdriver.ChromeOptions()
 prefs = {"download.default_directory": os.path.dirname(__file__)} # this does not work currently
 chromeOptions.add_experimental_option("prefs", prefs)
-
 driver = webdriver.Chrome(chrome_options=chromeOptions)
-
 driver.get('https://anchor.fm/dashboard/episodes')
 
 
 def login():
-    username = driver.find_element_by_name('email')
-    username.send_keys(EMAIL)
 
-    password = driver.find_element_by_name('password')
-    password.send_keys(PASSWORD)
-    time.sleep(1)
+    driver.find_element_by_xpath('//*[@class="css-125l5nm jsOutboundLink"]').click()
 
-    button = driver.find_element_by_xpath('//*[@id="LoginForm"]/div[3]/button')
+    wait_time = 30
+    login_id_xpath = '//*[@id="identifierNext"]'
+    WebDriverWait(driver, wait_time).until(EC.presence_of_element_located((By.XPATH, login_id_xpath)))
+    driver.find_element_by_name("identifier").send_keys(login_id)
+    driver.find_element_by_xpath(login_id_xpath).click()
 
-    button.click()
-
+    login_pw_xpath = '//*[@id="passwordNext"]'
+    WebDriverWait(driver, wait_time).until(EC.presence_of_element_located((By.XPATH, login_pw_xpath)))
+    driver.find_element_by_name("password").send_keys(login_pw)
+    time.sleep(1) 
+    driver.find_element_by_xpath(login_pw_xpath).click()
+    time.sleep(10)
+    driver.find_element_by_xpath('//*[@class="LinkStyles__link___qLgH7"]').click()
 
 def find_episodes():
     li_elements = driver.find_elements_by_xpath(
